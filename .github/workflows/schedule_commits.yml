@@ -1,0 +1,39 @@
+name: Auto Commit Scheduler
+
+on:
+  schedule:
+    # Runs at 08:00 UTC every day
+    - cron: '0 8 * * *'
+  workflow_dispatch: # Allows you to manually trigger the workflow from the Actions tab
+
+jobs:
+  auto-commit:
+    runs-on: ubuntu-latest
+    
+    # Required to allow the GitHub Actions bot to push changes
+    permissions:
+      contents: write 
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Update File
+        run: |
+          # Appends the current date and time to update.log
+          echo "Automated commit ran on: $(date)" >> update.log
+
+      - name: Commit and Push Changes
+        run: |
+          # Configure Git as the GitHub Actions bot
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          
+          # Stage the changed file
+          git add update.log
+          
+          # Commit the changes (only if there are changes to commit)
+          git diff --quiet && git diff --staged --quiet || git commit -m "chore: automated daily update"
+          
+          # Push the changes to the repository
+          git push
